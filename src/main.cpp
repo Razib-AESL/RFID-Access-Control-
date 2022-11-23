@@ -1,29 +1,27 @@
-#include <Arduino.h>
 #include <main.h>
-
 extern void set_Admin_Password();
 extern void set_Door_Password();
 extern void set_rfid_Master();
+void writeUint16IntoEEPROM(uint32_t addr,uint16_t writeVal);
+
+int statevar = 0;
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
- // lcd_setup();
- // rfid_sensor_setup();
+ 
+ for (size_t i = 0; i < 510; i++)
+ {
+   Serial.print(EEPROM.read(i));
+   Serial.print(" ");
+ }
+ if(EEPROM.read(flag_admin_panel_set_ADDRESS) == 255){
    set_Admin_Password();
    set_Door_Password();
-   set_rfid_Master();
+   }
+   
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
- /* 
-  read_rfid_tag();
-  lcd.setCursor(0,0);
-  lcd.print("UID: ");
-  lcd.print(myTag);
-  */
- // char customKey = customKeypad.getKey();
- Serial.println("Loop");
- 
+
 }

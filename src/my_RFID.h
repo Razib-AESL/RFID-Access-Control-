@@ -10,4 +10,5 @@ extern String content;
 extern MFRC522 mfrc522;
 extern byte readCard[4];
 extern void rfid_sensor_setup();
-extern void read_rfid_tag();
+//extern void read_rfid_tag();
+extern uint8_t read_rfid_tag();
