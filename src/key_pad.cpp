@@ -208,7 +208,7 @@ bool KeypadHandler()
 {
   if(intial_passwant_print){
       lcd.setCursor(0,0);
-  lcd.print("Enter Password");
+      lcd.print("Enter Password : ");
   }
 
   key = keypad.getKey();
@@ -219,22 +219,23 @@ bool KeypadHandler()
      lcd.print("*");
      Cursor1++;
      Serial.println(key);
-    if (key == 'C')
-    {
+     
+     switch (key)
+     {
+     case 'C':
       lcd.clear();
-      lcd.setCursor(0, 1);
-      //lcd.print("Enter Password");
-      input_key = "";
-    }
-    else if (key == 'D')
-    { // Enter button
+      Cursor1=0;
+      input_key = "";/* code */
+      break;
+
+      case 'D':
       keypad_EnterButton();
       Cursor1=0;
-    }
-    else
-    {
-      input_key += key;
-    }
+      break;
+     
+     default: input_key += key;
+      break;
+     }
   }
   if(flag_for_key_state)
   {
