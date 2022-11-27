@@ -5,13 +5,12 @@
 const int Enter_Button = BUTTON;
 int buttonState = 0;
 int StateNumber_passwordStates =0;
-int flag_stag=0;
 int CreateNewPasswordFlag=0;
 extern int rfid_step;
 int new_id_input = 0;
 extern bool flag_read_password;
 int Cursor1 = 0;
-bool intial_passwant_print = true;
+bool initial_passwant_print = true;
 
 /* right now unnecessary 
 unsigned long key_state_current_interrupt = 0;
@@ -71,7 +70,7 @@ void password_States()
   {
     case START:
     lcd.clear();
-    if (flag_stag == 1 || input_key =="1"){
+    if (input_key =="1"){
       StateNumber_passwordStates = CREATE_NEW_PASSWORD;
     }
     else if (input_key =="2"){
@@ -118,7 +117,7 @@ void password_States()
       CreateNewPasswordFlag = 1;
       input_key="";
       flag_for_key_state = false;
-      intial_passwant_print = false;
+      initial_passwant_print = false;
       break;
       }
     if (CreateNewPasswordFlag == 1){
@@ -132,7 +131,7 @@ void password_States()
         lcd.print("_");
         CreateNewPasswordFlag = 2;
         input_key="";
-        intial_passwant_print = false;
+        initial_passwant_print = false;
       }
       else{
         lcd.clear();
@@ -143,11 +142,10 @@ void password_States()
         lcd.print("_");
         delay(1000);
       lcd.clear();
-      intial_passwant_print = true;
+      initial_passwant_print = true;
       //reset all
       input_key="";
       CreateNewPasswordFlag=0;
-      flag_stag = 0;
       StateNumber_passwordStates=0;
       }
       flag_for_key_state = false; 
@@ -166,10 +164,9 @@ void password_States()
       Serial.println(password);
       input_key="";
       CreateNewPasswordFlag=0;
-      flag_stag = 0;
       StateNumber_passwordStates=0;
       flag_for_key_state = false;
-      intial_passwant_print = true;
+      initial_passwant_print = true;
       break;
     }
 
@@ -184,7 +181,7 @@ void password_States()
       new_id_input = 1;
       flag_for_key_state = false;
       rfid_step = NEW_RFID;
-      intial_passwant_print = false;
+      initial_passwant_print = false;
       break;
 
   }
@@ -206,7 +203,7 @@ void read_password()
 
 bool KeypadHandler()
 {
-  if(intial_passwant_print){
+  if(initial_passwant_print){
       lcd.setCursor(0,0);
       lcd.print("Enter Password : ");
   }
@@ -219,7 +216,7 @@ bool KeypadHandler()
      lcd.print("*");
      Cursor1++;
      Serial.println(key);
-     
+
      switch (key)
      {
      case 'C':
