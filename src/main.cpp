@@ -1,65 +1,42 @@
 #include <main.h>
 
-extern void writeUint8IntoEEPROMfromuintArr(uint32_t addr, uint8_t writeVal[], uint16_t arr_ln);
-extern void writeUint16IntoEEPROM(uint32_t addr, uint16_t writeVal);
-extern void set_Admin_Password();
+// extern void set_Admin_passwordword();
+extern void set_Admin_password();
 extern void set_Door_Password();
 extern void set_rfid_Master();
 extern void read_EEprom();
-extern void lcd_setup();
-extern void rfid_sensor_setup();
 extern void my_Settings();
-
-extern uint8_t successRead;
-extern byte storedCard[4];
-extern Keypad customKeypad;
-extern bool door_pass;
-
-void writeUint16IntoEEPROM(uint32_t addr, uint16_t writeVal);
-
+extern void LCD_print(uint8_t line1_start_pos, String line1_text, uint8_t line2_start_pos, String line2_text, double display_duration, bool is_clear);
+extern bool rfid_master;
 void setup()
 {
   // put your setup code here, to run once:
- // Serial.begin(115200);
+  Serial.begin(115200);
   EEPROM.begin(500);
-  pinMode(buzzerPin, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
   lcd_setup();
   rfid_sensor_setup();
-  lcd.setCursor(0, 0);
-  lcd.print("   WELCOME TO   ");
-  lcd.setCursor(0, 1);
-  lcd.print("-ACCESS CONTROL-");
-  delay(2500);
+
+  LCD_print(0, "   WELCOME TO   ", 0, "-ACCESS CONTROL-", 2500, false);
 
   for (size_t i = 0; i < 510; i++)
   {
     Serial.print(EEPROM.read(i));
     Serial.print(" ");
-    EEPROM.write(i, 255);
-    EEPROM.commit();
+      EEPROM.write(i, 255);
+      EEPROM.commit();
   }
 
   if (EEPROM.read(flag_admin_panel_set_ADDRESS) == 255)
   {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("DEVICE INITIAL..");
-    lcd.setCursor(0, 1);
-    lcd.print("CONFIGURATION !!");
-    delay(2000);
-    lcd.clear();
-
-    set_Admin_Password();
+    LCD_print(0, "DEVICE INITIAL..", 0, "CONFIGURATION !!", 2000, true);
+    set_Admin_password();
     set_Door_Password();
+    rfid_master = false;
     set_rfid_Master();
-
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("DEVICE CONFIGURE");
-    lcd.setCursor(0, 1);
-    lcd.print("SUCCESSFULLY !!!");
-    delay(2000);
-    lcd.clear();
+    EEPROM.write(flag_admin_panel_set_ADDRESS, 1);
+    EEPROM.commit();
+    LCD_print(0, "DEVICE CONFIGURE", 0, "SUCCESSFULLY !!!", 2000, true);
   }
   read_EEprom();
 }

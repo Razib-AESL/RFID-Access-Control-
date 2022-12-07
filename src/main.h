@@ -1,9 +1,16 @@
 #include <my_RFID.h>
 #include <my_LCD.h>
 #include <my_Keypad.h>
-#include<EEPROM.h>
+#include <EEPROM.h>
 #include <Arduino.h>
-#define buzzerPin 3
+
+/////////////////////////////////////////////////////////////
+
+#define BUZZER_PIN 3
+#define PASSWORD_LENGTH 8
+#define RFID_LENGTH 4
+
+////////////////////////////////////////////////////////////
 
 
 ///////////////////////////////////////////////////////////
@@ -24,3 +31,26 @@
 #define DOOR_PASS_START_ADDRESS               208
 #define MASTER_CARD_START_ADDRESS             51
 
+/////////////////////////////////////////////////////////////////////////////////////////
+extern void lcd_setup();
+extern void rfid_sensor_setup();
+
+extern void writeUint8IntoEEPROMfromuintArr(uint32_t addr, uint8_t writeVal[], uint16_t arr_ln);
+extern void writeEEprom_1byte(uint8_t address, uint value);
+extern void read_EEprom_Admin_Pass();
+extern void read_EEprom_Door_Pass();
+extern void read_EEprom_Master_card();
+extern void read_EEprom();
+
+extern bool check_Door_Password();
+extern void check_Key_Press();
+extern void set_Door_Password();
+//extern void set_Admin_Password();
+extern void set_rfid_Master();
+extern void set_Admin_password();
+
+
+extern void set_Admin_password();
+extern void compare_set_N_confirm_Pass(int flash_addr);
+extern void create_Admin_password();
+extern void create_Door_password();

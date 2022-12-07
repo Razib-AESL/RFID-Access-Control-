@@ -6,40 +6,44 @@
 #define CHANGE_DOOR_PASS 3
 #define CHANGE_ADMIN_PASS 4
 
-
-extern bool check_Door_Password();
-extern void check_Key_Press();
-extern void set_Door_Password();
-extern void set_Admin_Password();
-extern void set_rfid_Master();
-extern void read_EEprom();
-
 void add_New_card();
 void delete_Exist_Card();
-void change_Door_pass();
-void change_Admin_pass();
+void change_Door_pass(String val);
+void change_Admin_pass(String val);
 void change_Master_card();
 bool check_New_Card_Validity(uint8_t *tagArr, uint8_t *scanArr);
 bool scan_EEprom_for_Add_N_Delete_card();
-
-bool setting = true;
-uint8_t successRead1;
-int state = 0;
-bool setting_state = true;
-
-extern uint8_t doorPass[8];
-extern uint8_t adminPass[8];
-extern byte storedCard[4];
-
-byte new_Stored_Card[4];
-uint8_t new_Card_Read;
-uint8_t new_card_number = 0;
-
-bool flag_delete_tag = false;
 uint8_t read_addNewCard_arr[SIZE_ADD_NEW_CARD_MEMORY + SIZE_RFID_CARDIN_BYTE];
 
-extern void writeUint8IntoEEPROMfromuintArr(uint32_t addr, uint8_t writeVal[], uint16_t arr_ln);
-extern void writeEEprom_1byte(uint8_t address, uint value);
+extern uint8_t doorPass[PASSWORD_LENGTH];
+extern uint8_t adminPass[PASSWORD_LENGTH];
+extern byte storedCard[RFID_LENGTH];
+extern byte masterCard[RFID_LENGTH];
+extern uint8_t set_Password[PASSWORD_LENGTH];
+extern bool flag_Set_Password;
+extern bool flag_Cencel_Password;
+extern bool flag_Password_State;
+extern bool storeRfid;
+extern bool rfid_master;
+bool new_Card = true;
+bool new_Card_cencel = true;
+
+byte new_Stored_Card[RFID_LENGTH];
+uint8_t new_card_number = 0;
+
+uint8_t successRead1;
+int state = 0;
+bool setting = true;
+bool setting_state = true;
+bool flag_delete_tag = false;
+
+extern void LCD_print(uint8_t line1_start_pos, String line1_text, uint8_t line2_start_pos, String line2_text, double display_duration, bool is_clear);
+extern void create_Password(String val);
+extern void read_RFID_card();
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////----------------------MY SETTINGS-----------------------////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
 
 void my_Settings()
 {
@@ -49,40 +53,25 @@ void my_Settings()
     switch (state)
     {
     case ADD_NEW_CARD:
-      lcd.setCursor(0, 0);
-      lcd.print("ADD NEW CARD    ");
-      lcd.setCursor(0, 1);
-      lcd.print("D:OK #:NEXT B:EX");
+      LCD_print(0, "ADD NEW CARD    ", 0, "D:OK #:NEXT B:EX", 0, false);
       check_Key_Press();
       break;
 
     case DELETE_NEW_CARD:
-      lcd.setCursor(0, 0);
-      lcd.print("DELETE CARD     ");
-      lcd.setCursor(0, 1);
-      lcd.print("D:OK #:NEXT B:EX");
+      LCD_print(0, "DELETE CARD     ", 0, "D:OK #:NEXT B:EX", 0, false);
       check_Key_Press();
       break;
 
     case CHANGE_MASTER_CARD:
-      lcd.setCursor(0, 0);
-      lcd.print("CHNG MASTER CARD");
-      lcd.setCursor(0, 1);
-      lcd.print("D:OK #:NEXT B:EX");
+      LCD_print(0, "CHNG MASTER CARD", 0, "D:OK #:NEXT B:EX", 0, false);
       check_Key_Press();
       break;
     case CHANGE_DOOR_PASS:
-      lcd.setCursor(0, 0);
-      lcd.print("CHANGE DOOR PW  ");
-      lcd.setCursor(0, 1);
-      lcd.print("D:OK #:NEXT B:EX");
+      LCD_print(0, "CHANGE DOOR PW  ", 0, "D:OK #:NEXT B:EX", 0, false);
       check_Key_Press();
       break;
     case CHANGE_ADMIN_PASS:
-      lcd.setCursor(0, 0);
-      lcd.print("CHANGE ADMIN PW ");
-      lcd.setCursor(0, 1);
-      lcd.print("D:OK #:NEXT B:EX");
+      LCD_print(0, "CHANGE ADMIN PW ", 0, "D:OK #:NEXT B:EX", 0, false);
       check_Key_Press();
       break;
     }
@@ -93,10 +82,7 @@ void my_Settings()
   {
     if (setting)
     {
-      lcd.setCursor(0, 0);
-      lcd.print("SCAN YOUR CARD..");
-      lcd.setCursor(0, 1);
-      lcd.print("ENTER PASSWORD..");
+      LCD_print(0, "SCAN YOUR CARD..", 0, "ENTER PASSWORD..", 0, false);
       successRead1 = get_rfid_tag(); // sets successRead to 1 when we get read from reader otherwise 0
 
       check_Door_Password();
@@ -107,29 +93,23 @@ void my_Settings()
         scan_EEprom_for_Add_N_Delete_card();
         if (check_New_Card_Validity(readCard, read_addNewCard_arr))
         {
-          lcd.setCursor(0, 0);
-          lcd.print("AUTHORIZED ENTRY ");
-          lcd.setCursor(0, 1);
-          lcd.print("                 ");
-          digitalWrite(buzzerPin, HIGH);
+          LCD_print(0, "AUTHORIZED ENTRY ", 0, "                 ", 0, false);
+          digitalWrite(BUZZER_PIN, HIGH);
           delay(100);
-          digitalWrite(buzzerPin, LOW);
+          digitalWrite(BUZZER_PIN, LOW);
           delay(100);
-          digitalWrite(buzzerPin, HIGH);
+          digitalWrite(BUZZER_PIN, HIGH);
           delay(100);
-          digitalWrite(buzzerPin, LOW);          
+          digitalWrite(BUZZER_PIN, LOW);
           delay(1500);
-          
         }
         else
         {
-          lcd.setCursor(0, 0);
-          lcd.print("ENTRY DENIED !!! ");
-          lcd.setCursor(0, 1);
-          lcd.print("                 ");
-          digitalWrite(buzzerPin, HIGH);
+          LCD_print(0, "ENTRY DENIED !!! ", 0, "                 ", 0, false);
+
+          digitalWrite(BUZZER_PIN, HIGH);
           delay(800);
-          digitalWrite(buzzerPin, LOW);
+          digitalWrite(BUZZER_PIN, LOW);
           delay(100);
         }
       }
@@ -140,6 +120,7 @@ void my_Settings()
 /////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////-------------------CHECK KEY PRESS----------------------////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
+
 void check_Key_Press()
 {
 
@@ -167,53 +148,37 @@ void check_Key_Press()
   {
     if (state == ADD_NEW_CARD)
     {
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("SCAN YOUR NEW...");
-      lcd.setCursor(0, 1);
-      lcd.print("RFID CARD !!!   ");
+      LCD_print(0, "SCAN YOUR NEW...", 0, "RFID CARD !!!   ", 0, false);
       add_New_card();
     }
     else if (state == DELETE_NEW_CARD)
     {
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("SCAN YOUR CARD..");
-      lcd.setCursor(0, 1);
-      lcd.print("FOR DELETE  !!! ");
+      LCD_print(0, "SCAN YOUR OLD...", 0, "FOR DELETE  !!! ", 0, false);
       delete_Exist_Card();
     }
 
     else if (state == CHANGE_MASTER_CARD)
     {
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("SCAN YOUR OLD...");
-      lcd.setCursor(0, 1);
-      lcd.print("MASTER CARD !!! ");
+      LCD_print(0, "SCAN YOUR OLD...", 0, "MASTER CARD !!! ", 0, false);
       change_Master_card();
     }
 
     else if (state == CHANGE_DOOR_PASS)
     {
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("PUT OLD PASSWORD");
-      change_Door_pass();
+      LCD_print(0, "PUT OLD PASSWORD", 0, "                ", 0, false);
+      change_Door_pass("PUT OLD PASSWORD");
     }
 
     else if (state == CHANGE_ADMIN_PASS)
     {
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("PUT OLD PASSWORD");
-      change_Admin_pass();
+      LCD_print(0, "PUT OLD PASSWORD", 0, "                ", 0, false);
+      change_Admin_pass("PUT OLD PASSWORD");
     }
   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////SCAN EEprom FOR ADD AND DELETE CARD/////////////////////////////
+/////////////////-----------SCAN EEPROM FOR ADD AND DELETE CARD----------////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 bool scan_EEprom_for_Add_N_Delete_card()
@@ -226,7 +191,7 @@ bool scan_EEprom_for_Add_N_Delete_card()
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////CHECK NEW CARD VALIDITY/////////////////////////////////
+/////////////////---------------CHECK NEW CARD VALIDITY------------------////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 bool check_New_Card_Validity(uint8_t *tagArr, uint8_t *scanArr)
@@ -273,77 +238,63 @@ bool check_New_Card_Validity(uint8_t *tagArr, uint8_t *scanArr)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////--------------------READ NEW CARD-----------------------////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+void read_New_card()
+{
+  do
+  {
+    successRead1 = get_rfid_tag(); // sets successRead to 1 when we get read from reader otherwise 0
+    uint8_t customKey = customKeypad.getKey();
+    if (customKey == 'B')
+    {
+      new_Card_cencel = true;
+      setting_state = true;
+      break;
+    }
+
+    if (new_Card_cencel)
+    {
+      if (successRead1)
+      {
+        for (uint8_t j = 0; j < 4; j++) // Loop 4 times
+        {
+          new_Stored_Card[j] = readCard[j];
+        }
+        new_Card_cencel = false;
+      }
+    }
+  } while (!successRead1); // Program will not go further while you not get a successful read
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////---------------------ADD NEW CARD-----------------------////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 void add_New_card()
 {
-  uint8_t rfid_length = 4;
-  bool new_Card = true;
-  bool new_Card_cencel = true;
+  read_New_card();
 
-  /* READ NEW RFID TAG FIRST TIME HERE*/
-  do
-  {
-    successRead1 = get_rfid_tag(); // sets successRead to 1 when we get read from reader otherwise 0
-    if (successRead1)
-    {
-      for (uint8_t j = 0; j < 4; j++) // Loop 4 times
-      {
-        new_Stored_Card[j] = readCard[j];
-      }
-      uint8_t pas_length = 4;
-      while (pas_length != 0)
-      {
-        readCard[pas_length--] = 0; // clear array for new data
-      }
-    }
-    uint8_t customKey = customKeypad.getKey();
-    if (customKey == 'B')
-    {
-      new_Card_cencel = false;
-      setting_state = true;
-      break;
-    }
-  }
-
-  while (!successRead1); // Program will not go further while you not get a successful read
-
-  /* READ NEW RFID TAG SECOND TIME HERE*/
-  if (new_Card_cencel)
+  if (!new_Card_cencel)
   {
     Serial.println("Confirm your New card");
-    lcd.setCursor(0, 0);
-    lcd.print("CONFIRM YOUR NEW");
-    lcd.setCursor(0, 1);
-    lcd.print("SCAN CARD !!    ");
-    do
-    {
-      successRead1 = get_rfid_tag(); // sets successRead to 1 when we get read from reader otherwise 0
-      uint8_t customKey = customKeypad.getKey();
-      if (customKey == 'B')
-      {
-        new_Card_cencel = false;
-        setting_state = true;
-        break;
-      }
-    }
+    LCD_print(0, "CONFIRM YOUR NEW", 0, "SCAN CARD !!    ", 0, false);
 
-    while (!successRead1); // Program will not go further while you not get a successful read
+    read_New_card(); // READ NEW RFID TAG SECOND TIME HERE //
 
-    /* CONFIRM NEW CARD AND WRITE CARD TO THE EEPROM*/
-    if (!memcmp(readCard, new_Stored_Card, 4))
+    // CONFIRM NEW CARD AND WRITE CARD TO THE EEPROM //
+    if (!memcmp(readCard, new_Stored_Card, 4) && !new_Card_cencel)
     {
-      lcd.setCursor(0, 0);
-      lcd.print("YOUR SCAN CARD !!!");
-      lcd.setCursor(0, 1);
-      lcd.print("MATCHED.....   ");
-      delay(1000);
+      LCD_print(0, "YOUR SCAN CARD !!!", 0, "MATCHED.....    ", 2000, false);
       new_card_number = EEPROM.read(NUMBER_OF_RFID_TAG_ADDRESS);
-      if(new_card_number == 255){
-        new_card_number=0;
+
+      if (new_card_number == 255)
+      {
+        new_card_number = 0;
       }
       scan_EEprom_for_Add_N_Delete_card();
+
       if (!check_New_Card_Validity(readCard, read_addNewCard_arr))
       {
         Serial.println("not match");
@@ -352,44 +303,33 @@ void add_New_card()
           writeUint8IntoEEPROMfromuintArr(ID_CARD_START_ADDRESS + (new_card_number * SIZE_RFID_CARDIN_BYTE), new_Stored_Card, SIZE_RFID_CARDIN_BYTE);
           writeEEprom_1byte(NUMBER_OF_RFID_TAG_ADDRESS, new_card_number + 1);
           Serial.println("NEW CARD ADDED.. SUCCESSFULLY");
-          lcd.setCursor(0, 0);
-          lcd.print("NEW CARD ADDED..");
-          lcd.setCursor(0, 1);
-          lcd.print("SUCCESSFULLY !! ");
-          delay(2000);
+          LCD_print(0, "NEW CARD ADDED..", 0, "SUCCESSFULLY !! ", 2000, false);
 
           new_Card = false;
-          setting_state = true;
-          uint8_t pas_length = 4;
-          while (pas_length != 0)
-          {
-            new_Stored_Card[pas_length--] = 0; // clear array for new data
-          }
+          memset(new_Stored_Card, 0, sizeof(new_Stored_Card)); // clear byte array for new data
         }
 
         else if (new_card_number > MAXIMUM_CARD_NUMBER)
         {
           Serial.println("ALREADY EXIST !! OR MEMORY FULL..!! ");
-          lcd.setCursor(0, 0);
-          lcd.print("YOUR MEMORY FULL");
-          lcd.setCursor(0, 1);
-          lcd.print("PLZ DELETE CARD ");
-          delay(2000);
+          LCD_print(0, "YOUR MEMORY FULL", 0, "PLZ DELETE CARD ", 2000, false);
         }
       }
       else
       {
         Serial.println("ALREADY EXIST  ");
-        lcd.setCursor(0, 0);
-        lcd.print("ALREADY EXIST !!");
-        lcd.setCursor(0, 1);
-        lcd.print("                ");
-        setting_state = true;
-        delay(2000);
+        LCD_print(0, "ALREADY EXIST   ", 0, "                 ", 2000, false);
       }
+      setting_state = true;
       state = ADD_NEW_CARD;
     }
+    else if (!new_Card_cencel)
+    {
+      LCD_print(0, "YOUR SCAN CARD..", 0, "NOT MATCHED !!! ", 2000, false);
+    }
   }
+  new_Card = true;
+  new_Card_cencel = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -398,67 +338,19 @@ void add_New_card()
 void delete_Exist_Card()
 {
 
-  uint8_t rfid_length = 4;
-  bool delete_Card = true;
-  bool delete_Card_cencel = true;
+  read_New_card();
 
-  /* READ NEW RFID TAG FIRST TIME HERE*/
-  do
-  {
-    successRead1 = get_rfid_tag(); // sets successRead to 1 when we get read from reader otherwise 0
-    if (successRead1)
-    {
-      for (uint8_t j = 0; j < 4; j++) // Loop 4 times
-      {
-        new_Stored_Card[j] = readCard[j];
-      }
-      uint8_t pas_length = 4;
-      while (pas_length != 0)
-      {
-        readCard[pas_length--] = 0; // clear array for new data
-      }
-    }
-    uint8_t customKey = customKeypad.getKey();
-    if (customKey == 'B')
-    {
-      delete_Card_cencel = false;
-      setting_state = true;
-      break;
-    }
-  }
-
-  while (!successRead1); // Program will not go further while you not get a successful read
-
-  /* READ NEW RFID TAG SECOND TIME HERE*/
-  if (delete_Card_cencel)
+  if (!new_Card_cencel)
   {
     Serial.println("Confirm your New card");
-    lcd.setCursor(0, 0);
-    lcd.print("SCAN CONFIRM FOR");
-    lcd.setCursor(0, 1);
-    lcd.print("DELETE CARD !!! ");
-    do
-    {
-      successRead1 = get_rfid_tag(); // sets successRead to 1 when we get read from reader otherwise 0
-      uint8_t customKey = customKeypad.getKey();
-      if (customKey == 'B')
-      {
-        delete_Card_cencel = false;
-        setting_state = true;
-        break;
-      }
-    }
+    LCD_print(0, "SCAN CONFIRM FOR", 0, "DELETE CARD !!! ", 0, false);
 
-    while (!successRead1); // Program will not go further while you not get a successful read
+    read_New_card(); // READ NEW RFID TAG SECOND TIME HERE //
 
-    /* CONFIRM NEW CARD AND WRITE CARD TO THE EEPROM*/
-    if (!memcmp(readCard, new_Stored_Card, 4))
+    // CONFIRM NEW CARD AND WRITE CARD TO THE EEPROM
+    if (!memcmp(readCard, new_Stored_Card, 4) && !new_Card_cencel)
     {
-      lcd.setCursor(0, 0);
-      lcd.print("YOUR SCAN CARD !!!");
-      lcd.setCursor(0, 1);
-      lcd.print("MATCHED.....   ");
-      delay(1000);
+      LCD_print(0, "YOUR SCAN CARD !!!", 0, "MATCHED.....   ", 1500, false);
       flag_delete_tag = true;
       new_card_number = EEPROM.read(NUMBER_OF_RFID_TAG_ADDRESS);
       scan_EEprom_for_Add_N_Delete_card();
@@ -469,244 +361,126 @@ void delete_Exist_Card()
         Serial.println("not match");
         if (new_card_number <= MAXIMUM_CARD_NUMBER)
         {
-          // writeUint8IntoEEPROMfromuintArr(ID_CARD_START_ADDRESS + (new_card_number * SIZE_RFID_CARDIN_BYTE), new_Stored_Card, SIZE_RFID_CARDIN_BYTE);
           writeEEprom_1byte(NUMBER_OF_RFID_TAG_ADDRESS, new_card_number - 1);
           Serial.println("CARD DELETE.. SUCCESSFULLY");
-          lcd.setCursor(0, 0);
-          lcd.print("DELETE YOUR CARD");
-          lcd.setCursor(0, 1);
-          lcd.print("SUCCESSFULLY !! ");
-          delay(2000);
-
-          delete_Card = false;
-          setting_state = true;
-          uint8_t pas_length = 4;
-          while (pas_length != 0)
-          {
-            new_Stored_Card[pas_length--] = 0; // clear array for new data
-          }
+          LCD_print(0, "DELETE YOUR CARD", 0, "SUCCESSFULLY !! ", 2000, false);
+          new_Card = false;
+          memset(new_Stored_Card, 0, sizeof(new_Stored_Card)); // clear byte array for new data
         }
       }
       else
       {
         Serial.println("YOUR CARD NOT EXIST  ");
-        lcd.setCursor(0, 0);
-        lcd.print("YOUR CARD NOT...");
-        lcd.setCursor(0, 1);
-        lcd.print("EXIST  !!!!!    ");
-        delay(2000);
+        LCD_print(0, "YOUR CARD NOT...", 0, "EXIST  !!!!!    ", 2000, false);
       }
       setting_state = true;
       state = DELETE_NEW_CARD;
     }
+    else if (!new_Card_cencel)
+    {
+      LCD_print(0, "YOUR SCAN CARD..", 0, "NOT MATCHED !!! ", 2000, false);
+    }
   }
+  new_Card = true;
+  new_Card_cencel = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////-------------------CHECK MASTER CARD----------------------///////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
+
 void change_Master_card()
 {
-  uint8_t rfid_length = 4;
-  byte masterCard[rfid_length];
   bool master = true;
-  bool master_cencel = true;
 
-  do
+  read_RFID_card(); // read rfid tag and store ID in a new masterCard array
+
+  if (!memcmp(storedCard, masterCard, RFID_LENGTH))
   {
-    successRead1 = get_rfid_tag(); // sets successRead to 1 when we get read from reader otherwise 0
-    uint8_t customKey = customKeypad.getKey();
-    if (customKey == 'B')
-    {
-      setting_state = true;
-      master_cencel = false;
-      break;
-    }
-    if (successRead1)
-    {
-      for (uint8_t j = 0; j < 4; j++) // Loop 4 times
-      {
-        masterCard[j] = readCard[j];
-      }
-    }
-  }
-
-  while (!successRead1); // Program will not go further while you not get a successful read
-
-  if (!memcmp(storedCard, masterCard, 4))
-  {
-    lcd.setCursor(0, 0);
-    lcd.print("MASTER CARD !!!");
-    lcd.setCursor(0, 1);
-    lcd.print("MATCHED.....   ");
-    delay(2000);
+    LCD_print(0, "SCAN MASTER CARD", 0, "MATCHED  !!!    ", 2000, false);
     master = false;
-    uint8_t pas_length = 4;
-    while (pas_length != 0)
-    {
-      storedCard[pas_length--] = 0; // clear array for new data
-    }
+    storeRfid = true;
+    rfid_master = false;
+    memset(masterCard, 0, sizeof(masterCard)); // clear byte array for new data
   }
 
-  if (master && master_cencel)
+  if (master && !storeRfid)
   {
-    lcd.setCursor(0, 0);
-    lcd.print("MASTER CARD NOT ");
-    lcd.setCursor(0, 1);
-    lcd.print("MATCHED.....    ");
-    delay(2000);
-    setting_state = true;
+    LCD_print(0, "SCAN MASTER CARD", 0, "NOT MATCHED  !!! ", 2000, false);
   }
-  else if (!master)
+
+  if (!master && storeRfid)
   {
     set_rfid_Master();
-    setting_state = true;
     read_EEprom();
   }
+  setting_state = true;
+  storeRfid = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////-------------------CHANGE DOOR PASS----------------------///////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-void change_Door_pass()
+void change_Door_pass(String val)
 {
   bool door = true;
-  bool door_cencel = true;
-  uint8_t j = 0;
-  uint8_t pass_length = 8;
-  uint8_t door_password1[pass_length];
-  while (j < pass_length)
-  {
-    uint8_t customKey = customKeypad.getKey();
-    if (customKey)
-    {
-      if (customKey == 'B')
-      {
-        door_cencel = false;
-        setting_state = true;
-        break;
-      }
-      else if (customKey != 'C')
-      {
-        door_password1[j] = customKey;
-        Serial.print(customKey);
-        lcd.setCursor(j, 1);
-        lcd.print("* ");
-        j++;
-      }
-      else if (customKey == 'C')
-      {
-        j = 0;
-        lcd.setCursor(j, 1);
-        lcd.print("                ");
-      }
-    }
-  }
 
-  j = 0;
-  if (!memcmp(door_password1, doorPass, pass_length)) // if password Matched
+  create_Password(val);
+
+  if (!memcmp(set_Password, doorPass, PASSWORD_LENGTH)) // if password Matched
   {
-    lcd.setCursor(0, 0);
-    lcd.print("PASSWORD MATCHED ");
-    lcd.setCursor(0, 1);
-    lcd.print("!!!!!!!!!        ");
-    delay(2000);
+    LCD_print(0, "PASSWORD MATCHED", 0, "!!!!!!!!         ", 2000, false);
     door = false;
-    uint8_t pas_length = 8;
-    while (pas_length != 0)
-    {
-      door_password1[pas_length--] = 0; // clear array for new data
-    }
+    memset(set_Password, 0, sizeof(set_Password)); // clear array for new data
   }
 
-  if (door && door_cencel) // if password not Matched
+  if (door && flag_Cencel_Password) // if password not Matched
   {
-    lcd.setCursor(0, 0);
-    lcd.print("PASSWORD NOT    ");
-    lcd.setCursor(0, 1);
-    lcd.print("MATCHED.....    ");
-    delay(2000);
-    lcd.clear();
+    LCD_print(0, "PASSWORD NOT    ", 0, "MATCHED  !!!    ", 2000, true);
   }
 
   else if (!door)
   {
     set_Door_Password();
-    setting_state = true;
     read_EEprom();
   }
+
+  setting_state = true;
+  flag_Cencel_Password = true;
+  flag_Set_Password = true;
+  flag_Password_State = true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////-------------------CHANGE ADMIN PASS----------------------//////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-void change_Admin_pass()
+void change_Admin_pass(String val)
 {
   bool admin = true;
-  bool admin_cencel = true;
-  uint8_t j = 0;
-  uint8_t pass_length = 8;
-  uint8_t admin_password1[pass_length];
-  while (j < pass_length) // Create new password
-  {
-    uint8_t customKey = customKeypad.getKey();
-    if (customKey)
-    {
-      if (customKey == 'B')
-      {
-        admin_cencel = false;
-        setting_state = true;
-        break;
-      }
-      else if (customKey != 'C')
-      {
-        admin_password1[j] = customKey;
-        Serial.print(customKey);
-        lcd.setCursor(j, 1);
-        lcd.print("* ");
-        j++;
-      }
-      else if (customKey == 'C')
-      {
-        j = 0;
-        lcd.setCursor(j, 1);
-        lcd.print("                ");
-      }
-    }
-  }
 
-  j = 0;
-  if (!memcmp(admin_password1, adminPass, pass_length)) // if password Matched
+  create_Password(val);
+
+  if (!memcmp(set_Password, adminPass, PASSWORD_LENGTH)) // if password Matched
   {
-    lcd.setCursor(0, 0);
-    lcd.print("PASSWORD MATCHED ");
-    lcd.setCursor(0, 1);
-    lcd.print("!!!!!!!!         ");
-    delay(2000);
+    LCD_print(0, "PASSWORD MATCHED", 0, "!!!!!!!!         ", 2000, false);
     admin = false;
-    uint8_t pas_length = 8;
-    while (pas_length != 0)
-    {
-      admin_password1[pas_length--] = 0; // clear array for new data
-    }
+    memset(set_Password, 0, sizeof(set_Password)); // clear array for new data
   }
 
-  if (admin && admin_cencel)
-  { // if password not Matched
-    lcd.setCursor(0, 0);
-    lcd.print("PASSWORD NOT    ");
-    lcd.setCursor(0, 1);
-    lcd.print("MATCHED.....    ");
-    delay(2000);
-    lcd.clear();
+  if (admin && flag_Cencel_Password) // if password not Matched
+  {
+    LCD_print(0, "PASSWORD NOT....", 0, "MATCHED  !!!    ", 2000, false);
   }
 
   else if (!admin)
   {
-    set_Admin_Password();
-    setting_state = true;
+    set_Admin_password();
     read_EEprom();
   }
+  setting_state = true;
+  flag_Cencel_Password = true;
+  flag_Set_Password = true;
+  flag_Password_State = true;
 }
